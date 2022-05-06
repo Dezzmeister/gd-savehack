@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Hack the number of orbs obtained in a given GD level",
   "main": "dist/app.js",
-  "author": "Joe Desmond",
+  "author": "Lance Goodthrust",
   "license": "MIT",
   "private": true,
   "scripts": {
