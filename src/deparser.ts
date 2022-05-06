@@ -9,7 +9,6 @@ import {
 } from './invkeys';
 import { CoinStatKey, isStrObj, PartialReadableSave, ReadableSave, StatName, StrObj, Value } from './keys';
 import zlib from 'zlib';
-import fs from 'fs';
 
 export const GJ_VER = '2.0';
 
@@ -22,7 +21,7 @@ export function deparseReadableSave(data: ReadableSave): Buffer {
 	const partialSave: PartialReadableSave = { ...data, stats, gauntlets, officialLevels, onlineLevels, timelyLevels };
 	const unreadableSave = revertGKeys(partialSave);
 	const xml = generateXML(unreadableSave);
-	fs.writeFileSync('test.xml', xml);
+
 	return generateGDSaveFile(xml);
 }
 

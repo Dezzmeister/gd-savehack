@@ -127,6 +127,11 @@ async function completeLevel(id: number, attempts: number, jumps: number, coins:
 
 	const data = await getLevelInfo(id);
 
+	if (typeof data === 'string') {
+		console.error(data);
+		return;
+	}
+
 	for (const key in currentSaves) {
 		const save = currentSaves[key as keyof typeof currentSaves] as ReadableSave;
 		doCompleteLevel(save, data, attempts, jumps, coins);

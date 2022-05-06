@@ -68,6 +68,16 @@ export const orbAmounts = [0, 0, 50, 75, 125, 175, 225, 275, 350, 425, 500];
 
 export const demonTypes = ['Unknown', 'Hard', 'Unknown', 'Easy', 'Medium', 'Insane', 'Extreme'];
 
+export const demonTypesFull = {
+	Unknown: 0,
+	'Hard Demon': 1,
+	Unknown2: 2,
+	'Easy Demon': 3,
+	'Medium Demon': 4,
+	'Insane Demon': 5,
+	'Extreme Demon': 6,
+};
+
 export const ratingColors = {
 	Official: 'cyan',
 	Epic: '#ff8000',

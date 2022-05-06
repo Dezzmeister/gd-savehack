@@ -43,8 +43,11 @@ export type LevelInfo = {
 	songLink: string;
 };
 
-export async function getLevelInfo(levelId: number): Promise<LevelInfo> {
-	const response = await axios.get(`${API_URL}${LEVEL_INFO}/${levelId}`);
-
-	return response.data as LevelInfo;
+export async function getLevelInfo(levelId: number): Promise<LevelInfo | string> {
+	try {
+		const response = await axios.get(`${API_URL}${LEVEL_INFO}/${levelId}`);
+		return response.data as LevelInfo;
+	} catch (error) {
+		return `An error occurred: ${error}`;
+	}
 }

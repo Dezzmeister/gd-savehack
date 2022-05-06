@@ -1,5 +1,5 @@
 import { LevelInfo } from './api';
-import { ReadableSave, StrObj, Value } from './keys';
+import { demonTypesFull, ReadableSave, StrObj, Value } from './keys';
 
 const RAND_MAX = 2500000;
 const RAND_MIN = 50000;
@@ -11,7 +11,7 @@ function randomSeed(): number {
 
 export function completeLevel(save: ReadableSave, level: LevelInfo, attempts: number, jumps: number, coins: boolean) {
 	// Clicks, bestAttemptTime, and seed need to be faked accurately
-	const onlineLevel = {
+	let onlineLevel: StrObj<Value> = {
 		itemType: 'level',
 		id: parseInt(level.id),
 		playable: true,
@@ -26,6 +26,14 @@ export function completeLevel(save: ReadableSave, level: LevelInfo, attempts: nu
 		stars: level.stars,
 		seed: randomSeed(),
 	};
+
+	if (level.difficulty in demonTypesFull) {
+		onlineLevel = {
+			...onlineLevel,
+			demon: true,
+			demonType: demonTypesFull[level.difficulty as keyof typeof demonTypesFull],
+		};
+	}
 
 	if (!save.onlineLevels) {
 		save.onlineLevels = {};
@@ -67,6 +75,14 @@ export function completeLevel(save: ReadableSave, level: LevelInfo, attempts: nu
 
 	save.stats.stars += level.stars;
 	save.stats.orbs += level.orbs;
+
+	if (level.difficulty in demonTypesFull) {
+		if (!save.stats.demons) {
+			save.stats.demons = 0;
+		}
+
+		save.stats.demons++;
+	}
 
 	if (coins && level.verifiedCoins) {
 		if (!save.userCoins) {
