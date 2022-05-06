@@ -1,4 +1,4 @@
-import { difficulties, gKeys, kcekKeys, lengths, levelKeys, levelTypes, statKeys, StrObj } from './keys';
+import { difficulties, gameEvents, gKeys, kcekKeys, lengths, levelKeys, levelTypes, statKeys, StrObj } from './keys';
 
 export const invGKeys = invert(gKeys);
 export const invStatKeys = invert(statKeys);
@@ -7,6 +7,7 @@ export const invKcekKeys = toInts(invert(kcekKeys));
 export const invDifficulties = invertArray(difficulties);
 export const invLevelTypes = invertArray(levelTypes);
 export const invLengths = invertArray(lengths);
+export const invGameEvents = invert(gameEvents);
 
 function toInts(obj: StrObj<string>): StrObj<number> {
 	const out: StrObj<number> = {};

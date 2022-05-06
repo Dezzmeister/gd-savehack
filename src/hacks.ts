@@ -1,16 +1,109 @@
 import { LevelInfo } from './api';
-import { demonTypesFull, ReadableSave, StrObj, Value } from './keys';
+import { invGameEvents } from './invkeys';
+import { demonTypesFull, GameEvent, ReadableSave, StrObj, Value } from './keys';
+
+export type UnlockableValue = 'all' | GameEvent;
+export type IconType = typeof iconInfo[number]['type'];
 
 const RAND_MAX = 2500000;
 const RAND_MIN = 50000;
 const RAND_RANGE = RAND_MAX - RAND_MIN;
 
-function randomSeed(): number {
-	return Math.floor(Math.random() * RAND_RANGE + RAND_MIN);
+const iconInfo = <const>[
+	{
+		type: 'cube',
+		total: 142,
+		mappedName: 'i',
+	},
+	{
+		type: 'ship',
+		total: 51,
+		mappedName: 'ship',
+	},
+	{
+		type: 'ball',
+		total: 43,
+		mappedName: 'ball',
+	},
+	{
+		type: 'ufo',
+		total: 35,
+		mappedName: 'bird',
+	},
+	{
+		type: 'wave',
+		total: 35,
+		mappedName: 'dart',
+	},
+	{
+		type: 'robot',
+		total: 26,
+		mappedName: 'robot',
+	},
+	{
+		type: 'spider',
+		total: 17,
+		mappedName: 'spider',
+	},
+	{
+		type: 'trail',
+		total: 7,
+		mappedName: 'special',
+	},
+	{
+		type: 'death',
+		total: 17,
+		mappedName: 'death',
+	},
+];
+
+export function unlockIcon(save: ReadableSave, iconType: IconType, id: number | 'all') {
+	const iconTypeInfo = iconInfo.find((obj) => obj.type === iconType);
+
+	if (!iconTypeInfo) {
+		console.error(`Invalid icon type: ${iconType}`);
+		return;
+	}
+
+	if (!save.unlockedItems) {
+		save.unlockedItems = {};
+	}
+
+	if (id === 'all') {
+		for (let i = 2; i <= iconTypeInfo.total; i++) {
+			(save.unlockedItems as StrObj<Value>)[`${iconTypeInfo.mappedName}_${i}`] = '1';
+		}
+
+		return;
+	}
+
+	if (id < 2 || id > iconTypeInfo.total) {
+		console.error(
+			`Id out of bounds: for icon type ${iconType}, id must be between 2 and ${iconTypeInfo.total}. Received: ${id}`,
+		);
+		return;
+	}
+
+	(save.unlockedItems as StrObj<Value>)[`${iconTypeInfo.mappedName}_${id}`] = '1';
+}
+
+export function unlockGameEvent(save: ReadableSave, value: UnlockableValue) {
+	if (!save.unlockValueKeeper) {
+		save.unlockValueKeeper = {};
+	}
+
+	if (value !== 'all') {
+		(save.unlockValueKeeper as StrObj<Value>)[value] = '1';
+	}
+
+	for (const key in invGameEvents) {
+		(save.unlockValueKeeper as StrObj<Value>)[key] = '1';
+	}
 }
 
 export function completeLevel(save: ReadableSave, level: LevelInfo, attempts: number, jumps: number, coins: boolean) {
 	// Clicks, bestAttemptTime, and seed need to be faked accurately
+	// TODO: Increment total jumps and total attempts
 	let onlineLevel: StrObj<Value> = {
 		itemType: 'level',
 		id: parseInt(level.id),
@@ -101,4 +194,16 @@ export function completeLevel(save: ReadableSave, level: LevelInfo, attempts: nu
 	}
 
 	// TODO: Update necessary achievements and item unlocks for consistency
+}
+
+function randomSeed(): number {
+	return Math.floor(Math.random() * RAND_RANGE + RAND_MIN);
+}
+
+export function isUnlockableValue(value: string): value is UnlockableValue {
+	return value === 'all' || value in invGameEvents;
+}
+
+export function isIconType(type: string): type is IconType {
+	return iconInfo.some((obj) => obj.type === type);
 }

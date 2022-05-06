@@ -1,6 +1,7 @@
 import {
 	CoinStatKey,
 	difficulties,
+	gameEvents,
 	gKeys,
 	isGKey,
 	isSimpleTag,
@@ -118,6 +119,28 @@ function makeLevelObject(data: StrObj<Value>): StrObj<Value> {
 	return out;
 }
 
+function makeGameEventsObject(data: Value): StrObj<Value> {
+	if (typeof data !== 'object') {
+		return {};
+	}
+
+	const out: StrObj<Value> = {};
+
+	for (const key in data) {
+		if (typeof key !== 'string') {
+			continue;
+		}
+
+		if (key.includes('_')) {
+			const event = key.split('_')[1];
+			const eventName = gameEvents[event as keyof typeof gameEvents];
+			out[eventName] = data[key];
+		}
+	}
+
+	return out;
+}
+
 function parseUnreadableSave(data: Element): ReadableSave {
 	return parsePartialReadable(parseXML(data));
 }
@@ -129,8 +152,9 @@ function parsePartialReadable(data: PartialReadableSave): ReadableSave {
 	const officialLevels = data.officialLevels ? makeLevelObjects(data.officialLevels) : undefined;
 	const onlineLevels = data.onlineLevels ? makeLevelObjects(data.onlineLevels) : undefined;
 	const timelyLevels = data.timelyLevels ? makeLevelObjects(data.timelyLevels) : undefined;
+	const unlockValueKeeper = data.unlockValueKeeper ? makeGameEventsObject(data.unlockValueKeeper) : undefined;
 
-	return { ...out, stats, gauntlets, officialLevels, onlineLevels, timelyLevels };
+	return { ...out, stats, gauntlets, officialLevels, onlineLevels, timelyLevels, unlockValueKeeper };
 }
 
 /**

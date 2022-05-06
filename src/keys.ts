@@ -1,3 +1,4 @@
+// TODO: Tighten these types and write a more accurate type for the complete readable save
 // Type declarations
 
 export type GKey = keyof typeof gKeys;
@@ -59,6 +60,9 @@ export type RawLevelMap = {
 export type RawLevelList = {
 	[levelId: string]: StrObj<Value>;
 };
+
+export type RawGameEvent = keyof typeof gameEvents;
+export type GameEvent = typeof gameEvents[RawGameEvent];
 
 // KV maps
 
@@ -385,87 +389,6 @@ export const difficulties = <const>['Easy', 'Normal', 'Hard', 'Harder', 'Insane'
 export const levelTypes = <const>['official', 'local', 'saved', 'online'];
 export const lengths = <const>['Tiny', 'Short', 'Medium', 'Long', 'XL'];
 
-export const levelKeysOld = <const>{
-	k1: 'id',
-	k2: 'name',
-	k3: { name: 'description' },
-	k4: 'levelData',
-	k5: 'author',
-	k6: 'playerID',
-	k7: { name: 'difficulty', bump: ['Easy', 'Normal', 'Hard', 'Harder', 'Insane', 'Demon'] },
-	k8: 'officialSongID',
-	k9: 'ratingScore1',
-	k10: 'ratingScore2',
-	k11: 'downloads',
-	k12: 'completions',
-	k13: 'editable',
-	k14: 'verified',
-	k15: 'uploaded',
-	k16: 'version',
-	k17: 'gameVersion',
-	k18: 'attempts',
-	k19: 'percentage',
-	k20: 'practicePercentage',
-	k21: { name: 'levelType', bump: ['official', 'local', 'saved', 'online'] },
-	k22: 'likes',
-	k23: { name: 'length', bump: ['Tiny', 'Short', 'Medium', 'Long', 'XL'] },
-	k24: 'dislikes',
-	k25: 'demon',
-	k26: 'stars',
-	k27: 'featuredPosition',
-	k33: 'auto',
-	k34: 'replayData',
-	k35: 'playable',
-	k36: 'jumps',
-	k37: 'secretCoinsToUnlock',
-	k38: 'levelUnlocked',
-	k41: 'password',
-	k42: 'copiedID',
-	k43: 'twoPlayer',
-	k45: 'customSongID',
-	k46: 'revision',
-	k47: 'edited',
-	k48: 'objects',
-	k50: 'binaryVersion',
-	k60: 'accountID',
-	k61: 'firstCoinCollected',
-	k62: 'secondCoinCollected',
-	k63: 'thirdCoinCollected',
-	k64: 'totalCoins',
-	k65: 'verifiedCoins',
-	k66: 'requestedStars',
-	k67: 'extraString',
-	k68: 'antiCheatTriggered',
-	k69: 'large',
-	k71: 'manaOrbPercentage',
-	k72: 'ldm',
-	k73: 'ldmEnabled',
-	k74: 'timelyID',
-	k75: 'epic',
-	k76: 'demonType',
-	k77: 'isGauntlet',
-	k78: 'isGauntlet2',
-	k79: 'unlisted',
-	k80: 'editorTime',
-	k81: 'totalEditorTime',
-	k82: 'favorited',
-	k83: 'savedLevelIndex',
-	k84: 'folder',
-	k85: 'clicks',
-	k86: 'bestAttemptTime',
-	k87: 'seed',
-	k88: 'scores',
-	k89: 'leaderboardValid',
-	k90: 'leaderboardPercentage',
-	kI1: 'editorCameraX',
-	kI2: 'editorCameraY',
-	kI3: 'editorCameraZoom',
-	kI4: 'editorBuildTabPage',
-	kI5: 'editorBuildTabCategory',
-	kI6: 'editorRecentPages',
-	kI7: 'editorLayer',
-};
-
 export const gameVariables = {
 	'0001': 'editor.followPlayer',
 	'0002': 'editor.playMusic',
@@ -556,7 +479,7 @@ export const gameVariables = {
 	'0102': 'editor.editorSmoothFix',
 };
 
-export const gameEvents = {
+export const gameEvents = <const>{
 	'1': 'challengeUnlocked',
 	'2': 'glubfubHint1',
 	'3': 'glubfubHint2',

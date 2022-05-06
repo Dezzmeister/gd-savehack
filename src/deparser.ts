@@ -1,5 +1,6 @@
 import {
 	invDifficulties,
+	invGameEvents,
 	invGKeys,
 	invKcekKeys,
 	invLengths,
@@ -13,12 +14,21 @@ import zlib from 'zlib';
 export const GJ_VER = '2.0';
 
 export function deparseReadableSave(data: ReadableSave): Buffer {
+	const unlockValueKeeper = revertGameEventsObject((data.unlockValueKeeper || {}) as StrObj<Value>);
 	const timelyLevels = revertLevelObjects((data.timelyLevels || {}) as StrObj<Value>);
 	const onlineLevels = revertLevelObjects((data.onlineLevels || {}) as StrObj<Value>);
 	const officialLevels = revertLevelObjects((data.officialLevels || {}) as StrObj<Value>);
 	const gauntlets = revertLevelObjects((data.gauntlets || {}) as StrObj<Value>);
 	const stats = revertStatsObject(data.stats);
-	const partialSave: PartialReadableSave = { ...data, stats, gauntlets, officialLevels, onlineLevels, timelyLevels };
+	const partialSave: PartialReadableSave = {
+		...data,
+		stats,
+		gauntlets,
+		officialLevels,
+		onlineLevels,
+		timelyLevels,
+		unlockValueKeeper,
+	};
 	const unreadableSave = revertGKeys(partialSave);
 	const xml = generateXML(unreadableSave);
 
@@ -30,6 +40,21 @@ function generateGDSaveFile(data: string): Buffer {
 	const encoded = Buffer.from(compressed).toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
 	const xored = Buffer.from(encoded).map((x) => x ^ 11);
 	return Buffer.from(xored);
+}
+
+function revertGameEventsObject(data: StrObj<Value>): StrObj<Value> {
+	const out: StrObj<Value> = {};
+
+	for (const key in data) {
+		if (typeof key !== 'string') {
+			continue;
+		}
+
+		const invKey = invGameEvents[key];
+		out[`ugv_${invKey}`] = data[key];
+	}
+
+	return out;
 }
 
 function revertLevelObjects(data: StrObj<Value>): StrObj<Value> {

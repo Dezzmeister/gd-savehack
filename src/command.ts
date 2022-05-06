@@ -5,14 +5,32 @@ import { GD_PATH, SaveFile, SAVE_FILES, SAVE_PATHS } from './app';
 import { deparseReadableSave } from './deparser';
 import { ReadableSave } from './keys';
 import { readGDSaveFile } from './parser';
-import { completeLevel as doCompleteLevel } from './hacks';
+import {
+	completeLevel as doCompleteLevel,
+	unlockIcon as doUnlockIcon,
+	isUnlockableValue,
+	unlockGameEvent,
+	isIconType,
+	IconType,
+} from './hacks';
 
 type Command = typeof commands[number];
 type CommandMap<T> = {
 	[key in Command]: T;
 };
 
-const commands = <const>['help', 'backup', 'restore', 'load', 'store', 'get_level', 'complete_level', 'write'];
+const commands = <const>[
+	'help',
+	'backup',
+	'restore',
+	'load',
+	'store',
+	'get_level',
+	'complete_level',
+	'write',
+	'unlock_value',
+	'unlock_icon',
+];
 
 const currentSaves: {
 	[key in SaveFile]?: ReadableSave;
@@ -27,6 +45,8 @@ const commandSyntaxes: CommandMap<string> = {
 	get_level: 'get_level <id>',
 	complete_level: 'complete_level <id> <attempts> <jumps> [coins]',
 	write: 'write [dir]',
+	unlock_value: 'unlock_value <value>',
+	unlock_icon: 'unlock_icon <type> [id]',
 };
 
 const commandDescriptions: CommandMap<string> = {
@@ -39,6 +59,10 @@ const commandDescriptions: CommandMap<string> = {
 	complete_level:
 		'Complete the level with the given id. Attempts and jumps are also required. [coins] is an optional boolean that will also give all user coins when set to true, but only if the user coins are verified. Makes a request to the GDBrowser API.',
 	write: "Write all changes to active saves to the .json save files. This should be run before running 'store', but after running 'load' and making changes to the save. JSON saves will be written to the given directory, or the current working directory if none is provided.",
+	unlock_value:
+		"Unlock a player-specific game variable. (Ex: demon keys, treasure room, etc.). 'value' can be either 'all' or one of a list of values. Do 'help unlock_value' for more details.",
+	unlock_icon:
+		"Unlock a specific icon, or all icons of a type. If a type is provided but no id, all icons of that type will be unlocked. The type can be one of 'cube', 'ship', 'ball', etc. Do 'help unlock_icon' for more details.",
 };
 
 export async function handleCommand(command: string): Promise<void> {
@@ -105,14 +129,68 @@ export async function handleCommand(command: string): Promise<void> {
 			writeSaves(tokens[1]);
 			return;
 		}
+		case 'unlock_value': {
+			const value = tokens[1];
+
+			if (!value) {
+				return tokenError('value', 'string');
+			}
+
+			unlockValue(value);
+			return;
+		}
+		case 'unlock_icon': {
+			const iconType = tokens[1];
+			const id = parseInt(tokens[2]);
+
+			if (!isIconType(iconType)) {
+				console.error(`Invalid icon type: ${iconType}. Do 'help unlock_icon' for more info.`);
+				return;
+			}
+
+			if (tokens[2] !== undefined && isNaN(id)) {
+				console.error(`Invalid id. Do 'help unlock_icon' for more info.`);
+				return;
+			}
+
+			unlockIcon(iconType, tokens[2] === undefined ? 'all' : id);
+			return;
+		}
 	}
 }
 
-function tokenError(paramName: string, type: string) {
-	console.error(`Missing expected parameter <${paramName}> with type ${type}`);
+function unlockIcon(iconType: IconType, id: number | 'all') {
+	for (const key in currentSaves) {
+		const save = currentSaves[key as keyof typeof currentSaves] as ReadableSave;
+		doUnlockIcon(save, iconType, id);
+	}
+}
+
+function unlockValue(value: string): void {
+	if (Object.keys(currentSaves).length === 0) {
+		console.error("You need to have at least one active save for this to work. Do 'load' or 'help' for more info.");
+		return;
+	}
+
+	if (!isUnlockableValue(value)) {
+		console.error(
+			`Expected unlockable value, received '${value}' instead. Do 'help unlock_value' for more details.`,
+		);
+		return;
+	}
+
+	for (const key in currentSaves) {
+		const save = currentSaves[key as keyof typeof currentSaves] as ReadableSave;
+		unlockGameEvent(save, value);
+	}
 }
 
 function writeSaves(dir = '.') {
+	if (Object.keys(currentSaves).length === 0) {
+		console.error("You need to have at least one active save for this to work. Do 'load' or 'help' for more info.");
+		return;
+	}
+
 	for (const filename of SAVE_FILES) {
 		const save = currentSaves[filename] as ReadableSave;
 		fs.writeFileSync(path.join(dir, `${filename}.json`), JSON.stringify(save));
@@ -186,4 +264,8 @@ function loadSaves(dir = '.') {
 
 function isCommand(command: string): command is Command {
 	return !!command && commands.includes(command as Command);
+}
+
+function tokenError(paramName: string, type: string) {
+	console.error(`Invalid or missing expected parameter <${paramName}> with type ${type}`);
 }
