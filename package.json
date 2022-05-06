@@ -1,0 +1,29 @@
+{
+  "name": "gd-savehack",
+  "version": "1.0.0",
+  "description": "Hack the number of orbs obtained in a given GD level",
+  "main": "dist/app.js",
+  "author": "Joe Desmond",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "npx ts-node src/app.ts",
+    "start:r": "ts-node-dev --respawn -T src/app.ts"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^16.2.14",
+    "@types/node": "^17.0.31",
+    "@types/readline-sync": "^1.4.4",
+    "eslint": "^8.14.0",
+    "eslint-config-prettier": "^8.5.0",
+    "prettier": "^2.6.2",
+    "ts-node": "^10.7.0",
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.6.4"
+  },
+  "dependencies": {
+    "axios": "^0.27.2",
+    "jsdom": "^19.0.0",
+    "readline-sync": "^1.4.10"
+  }
+}
