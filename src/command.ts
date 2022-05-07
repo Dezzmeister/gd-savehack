@@ -15,6 +15,7 @@ import {
 } from './hacks';
 import { printCommandInfo, printHelpInfo } from './ui';
 import { isIdCSV, parseCSV } from './list';
+import { cacheLevel, writeCache } from './cache';
 
 export type Command = typeof commands[number];
 export type CommandMap<T> = {
@@ -144,23 +145,34 @@ export async function handleCommand(command: string): Promise<void> {
 				return tokenError('path', 'string');
 			}
 
-			cacheMulti(filename);
+			await cacheMulti(filename);
 			return;
 		}
 	}
 }
 
-function cacheMulti(filename: string) {
+async function cacheMulti(filename: string) {
 	const file = fs.readFileSync(filename).toString();
 	const csv = parseCSV(file);
-
 	if (!isIdCSV(csv)) {
 		console.error(`Invalid CSV file`);
 		return;
 	}
 
-	console.log(JSON.stringify(csv));
-	// TODO: Add level caching
+	for (const datum of csv) {
+		const id = datum.id;
+
+		const levelData = await getLevelInfo(id);
+
+		if (typeof levelData === 'string') {
+			console.log(`Error for level ${id}: ${levelData}`);
+			continue;
+		}
+
+		cacheLevel(levelData);
+	}
+
+	writeCache();
 }
 
 function unlockIcon(iconType: IconType, id: number | 'all') {
@@ -263,5 +275,5 @@ function isCommand(command: string): command is Command {
 }
 
 function tokenError(paramName: string, type: string) {
-	console.error(`Invalid or missing expected parameter <${paramName}> with type ${type}`);
+	console.error(`Invalid or missing required parameter <${paramName}> with type ${type}`);
 }

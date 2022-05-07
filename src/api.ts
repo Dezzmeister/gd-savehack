@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { cacheLevel, getCachedLevel, writeCache } from './cache';
 
 const API_URL = 'https://gdbrowser.com/api';
 const LEVEL_INFO = '/level';
@@ -44,8 +45,17 @@ export type LevelInfo = {
 };
 
 export async function getLevelInfo(levelId: number): Promise<LevelInfo | string> {
+	const cached = getCachedLevel(levelId);
+
+	if (cached) {
+		return cached;
+	}
+
 	try {
 		const response = await axios.get(`${API_URL}${LEVEL_INFO}/${levelId}`);
+		cacheLevel(response.data);
+		writeCache();
+
 		return response.data as LevelInfo;
 	} catch (error) {
 		return `An error occurred: ${error}`;

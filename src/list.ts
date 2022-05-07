@@ -23,7 +23,13 @@ export function parseCSV(csv: string): CSVData | undefined {
 
 		const datum: StrObj<string | number> = {};
 		for (let col = 0; col < columns.length; col++) {
-			datum[columns[col]] = row[col];
+			const maybeNum = Number(row[col]);
+
+			if (isNaN(maybeNum)) {
+				datum[columns[col]] = row[col];
+			} else {
+				datum[columns[col]] = maybeNum;
+			}
 		}
 		out.push(datum);
 	}
