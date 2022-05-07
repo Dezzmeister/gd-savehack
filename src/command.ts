@@ -13,9 +13,11 @@ import {
 	isIconType,
 	IconType,
 } from './hacks';
+import { printCommandInfo, printHelpInfo } from './ui';
+import { isIdCSV, parseCSV } from './list';
 
-type Command = typeof commands[number];
-type CommandMap<T> = {
+export type Command = typeof commands[number];
+export type CommandMap<T> = {
 	[key in Command]: T;
 };
 
@@ -30,40 +32,12 @@ const commands = <const>[
 	'write',
 	'unlock_value',
 	'unlock_icon',
+	'cache_multi',
 ];
 
 const currentSaves: {
 	[key in SaveFile]?: ReadableSave;
 } = {};
-
-const commandSyntaxes: CommandMap<string> = {
-	help: 'help',
-	backup: 'backup',
-	restore: 'restore',
-	load: 'load [dir]',
-	store: 'store [dir]',
-	get_level: 'get_level <id>',
-	complete_level: 'complete_level <id> <attempts> <jumps> [coins]',
-	write: 'write [dir]',
-	unlock_value: 'unlock_value <value>',
-	unlock_icon: 'unlock_icon <type> [id]',
-};
-
-const commandDescriptions: CommandMap<string> = {
-	help: 'Display this information',
-	backup: 'Back up current save files. Backups will be stored in the same directory as the original saves',
-	restore: "Restore backed up save data. Only works if 'backup' was run previously.",
-	load: 'Load save files and save them in the current working directory as more readable .json. If a directory is provided, .json saves will be stored in that directory instead.',
-	store: 'Transform .json save files back to their original format and store them in the GD save directory. This will replace existing saves. By default, .json saves will be read from the current working directory. If a directory is provided, .json saves will be read from there instead.',
-	get_level: 'Get info about a level with the given id. Makes a request to the GDBrowser API.',
-	complete_level:
-		'Complete the level with the given id. Attempts and jumps are also required. [coins] is an optional boolean that will also give all user coins when set to true, but only if the user coins are verified. Makes a request to the GDBrowser API.',
-	write: "Write all changes to active saves to the .json save files. This should be run before running 'store', but after running 'load' and making changes to the save. JSON saves will be written to the given directory, or the current working directory if none is provided.",
-	unlock_value:
-		"Unlock a player-specific game variable. (Ex: demon keys, treasure room, etc.). 'value' can be either 'all' or one of a list of values. Do 'help unlock_value' for more details.",
-	unlock_icon:
-		"Unlock a specific icon, or all icons of a type. If a type is provided but no id, all icons of that type will be unlocked. The type can be one of 'cube', 'ship', 'ball', etc. Do 'help unlock_icon' for more details.",
-};
 
 export async function handleCommand(command: string): Promise<void> {
 	const tokens = command.split(' ');
@@ -76,6 +50,13 @@ export async function handleCommand(command: string): Promise<void> {
 
 	switch (operation) {
 		case 'help': {
+			const commandArg = tokens[1];
+
+			if (isCommand(commandArg)) {
+				printCommandInfo(commandArg);
+				return;
+			}
+
 			printHelpInfo();
 			return;
 		}
@@ -156,7 +137,30 @@ export async function handleCommand(command: string): Promise<void> {
 			unlockIcon(iconType, tokens[2] === undefined ? 'all' : id);
 			return;
 		}
+		case 'cache_multi': {
+			const filename = tokens[1];
+
+			if (!filename) {
+				return tokenError('path', 'string');
+			}
+
+			cacheMulti(filename);
+			return;
+		}
 	}
+}
+
+function cacheMulti(filename: string) {
+	const file = fs.readFileSync(filename).toString();
+	const csv = parseCSV(file);
+
+	if (!isIdCSV(csv)) {
+		console.error(`Invalid CSV file`);
+		return;
+	}
+
+	console.log(JSON.stringify(csv));
+	// TODO: Add level caching
 }
 
 function unlockIcon(iconType: IconType, id: number | 'all') {
@@ -219,14 +223,6 @@ async function completeLevel(id: number, attempts: number, jumps: number, coins:
 async function getLevel(id: number): Promise<void> {
 	const data = await getLevelInfo(id);
 	console.log(data);
-}
-
-function printHelpInfo() {
-	console.log('\n');
-	for (const command of commands) {
-		console.log(`${commandSyntaxes[command]} - ${commandDescriptions[command]}`);
-	}
-	console.log('\n');
 }
 
 function backupSaves() {

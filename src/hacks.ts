@@ -9,7 +9,7 @@ const RAND_MAX = 2500000;
 const RAND_MIN = 50000;
 const RAND_RANGE = RAND_MAX - RAND_MIN;
 
-const iconInfo = <const>[
+export const iconInfo = <const>[
 	{
 		type: 'cube',
 		total: 142,
@@ -57,6 +57,13 @@ const iconInfo = <const>[
 	},
 ];
 
+export type LevelList = {
+	id: number;
+	attempts?: number;
+	jumps?: number;
+	coins?: boolean;
+}[];
+
 export function unlockIcon(save: ReadableSave, iconType: IconType, id: number | 'all') {
 	const iconTypeInfo = iconInfo.find((obj) => obj.type === iconType);
 
@@ -103,7 +110,6 @@ export function unlockGameEvent(save: ReadableSave, value: UnlockableValue) {
 
 export function completeLevel(save: ReadableSave, level: LevelInfo, attempts: number, jumps: number, coins: boolean) {
 	// Clicks, bestAttemptTime, and seed need to be faked accurately
-	// TODO: Increment total jumps and total attempts
 	let onlineLevel: StrObj<Value> = {
 		itemType: 'level',
 		id: parseInt(level.id),
@@ -116,9 +122,12 @@ export function completeLevel(save: ReadableSave, level: LevelInfo, attempts: nu
 		leaderboardPercentage: 100,
 		leaderboardValid: true,
 		scores: '100',
-		stars: level.stars,
 		seed: randomSeed(),
 	};
+
+	if (level.stars) {
+		onlineLevel.stars = level.stars;
+	}
 
 	if (level.difficulty in demonTypesFull) {
 		onlineLevel = {
@@ -144,7 +153,9 @@ export function completeLevel(save: ReadableSave, level: LevelInfo, attempts: nu
 		save.levelStars = {};
 	}
 
-	(save.levelStars as StrObj<Value>)[level.id] = `${level.stars}`;
+	if (level.stars) {
+		(save.levelStars as StrObj<Value>)[level.id] = `${level.stars}`;
+	}
 
 	if (!save.completedLevels) {
 		save.completedLevels = {};
@@ -166,8 +177,18 @@ export function completeLevel(save: ReadableSave, level: LevelInfo, attempts: nu
 		save.stats.orbs = 0;
 	}
 
-	save.stats.stars += level.stars;
+	if (!save.stats.jumps) {
+		save.stats.jumps = 0;
+	}
+
+	if (!save.stats.attempts) {
+		save.stats.attempts = 0;
+	}
+
+	save.stats.stars += level.stars || 0;
 	save.stats.orbs += level.orbs;
+	save.stats.jumps += jumps;
+	save.stats.attempts += attempts;
 
 	if (level.difficulty in demonTypesFull) {
 		if (!save.stats.demons) {
