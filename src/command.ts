@@ -7,14 +7,16 @@ import { ReadableSave } from './keys';
 import { readGDSaveFile } from './parser';
 import {
 	completeLevel as doCompleteLevel,
+	completeMulti as doCompleteMulti,
 	unlockIcon as doUnlockIcon,
 	isUnlockableValue,
 	unlockGameEvent,
 	isIconType,
 	IconType,
+	LevelList,
 } from './hacks';
 import { printCommandInfo, printHelpInfo } from './ui';
-import { isIdCSV, parseCSV } from './list';
+import { isLevelCSV, parseCSV } from './list';
 import { cacheLevel, writeCache } from './cache';
 
 export type Command = typeof commands[number];
@@ -34,6 +36,7 @@ const commands = <const>[
 	'unlock_value',
 	'unlock_icon',
 	'cache_multi',
+	'complete_multi',
 ];
 
 const currentSaves: {
@@ -148,13 +151,51 @@ export async function handleCommand(command: string): Promise<void> {
 			await cacheMulti(filename);
 			return;
 		}
+		case 'complete_multi': {
+			const filename = tokens[1];
+			const coins = tokens[2] === 'true' ? true : false;
+
+			if (!filename) {
+				return tokenError('path', 'string');
+			}
+
+			await completeMulti(filename, coins);
+			return;
+		}
+	}
+}
+
+async function completeMulti(filename: string, coins: boolean) {
+	const file = fs.readFileSync(filename).toString();
+	const csv = parseCSV(file);
+	if (!isLevelCSV(csv)) {
+		console.error(`Invalid CSV file`);
+		return;
+	}
+
+	const levelList: LevelList = [];
+
+	for (const level of csv) {
+		const info = await getLevelInfo(level.id);
+
+		if (typeof info === 'string') {
+			console.error(`Error for level ${level.id}: ${info}`);
+			continue;
+		}
+
+		levelList.push({ ...level, info });
+	}
+
+	for (const key in currentSaves) {
+		const save = currentSaves[key as keyof typeof currentSaves] as ReadableSave;
+		doCompleteMulti(save, levelList, coins);
 	}
 }
 
 async function cacheMulti(filename: string) {
 	const file = fs.readFileSync(filename).toString();
 	const csv = parseCSV(file);
-	if (!isIdCSV(csv)) {
+	if (!isLevelCSV(csv)) {
 		console.error(`Invalid CSV file`);
 		return;
 	}

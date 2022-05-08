@@ -1,3 +1,4 @@
+import randomNormal from 'random-normal';
 import { LevelInfo } from './api';
 import { invGameEvents } from './invkeys';
 import { demonTypesFull, GameEvent, ReadableSave, StrObj, Value } from './keys';
@@ -59,9 +60,9 @@ export const iconInfo = <const>[
 
 export type LevelList = {
 	id: number;
+	info: LevelInfo;
 	attempts?: number;
 	jumps?: number;
-	coins?: boolean;
 }[];
 
 export function unlockIcon(save: ReadableSave, iconType: IconType, id: number | 'all') {
@@ -105,6 +106,15 @@ export function unlockGameEvent(save: ReadableSave, value: UnlockableValue) {
 
 	for (const key in invGameEvents) {
 		(save.unlockValueKeeper as StrObj<Value>)[key] = '1';
+	}
+}
+
+export function completeMulti(save: ReadableSave, levels: LevelList, coins: boolean) {
+	for (const level of levels) {
+		const attempts = level.attempts || randomAttempts(level.info.difficulty);
+		const jumps = level.jumps || randomJumps(level.info.difficulty, attempts);
+
+		completeLevel(save, level.info, attempts, jumps, coins);
 	}
 }
 
@@ -215,6 +225,20 @@ export function completeLevel(save: ReadableSave, level: LevelInfo, attempts: nu
 	}
 
 	// TODO: Update necessary achievements and item unlocks for consistency
+}
+
+function randomAttempts(difficulty: string): number {
+	if (difficulty.includes('Demon')) {
+		return randomNormal({ mean: 2200, dev: 325 });
+	}
+
+	return randomNormal({ mean: 250, dev: 50 });
+}
+
+function randomJumps(difficulty: string, attempts: number): number {
+	const factor = difficulty.includes('Demon') ? 100 : 50;
+
+	return attempts * randomNormal({ mean: factor, dev: 20 });
 }
 
 function randomSeed(): number {

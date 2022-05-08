@@ -100,6 +100,11 @@ const commands: CommandMap<FormattedCommand> = {
 		description: `Cache level info for a list of levels. <path> should point to a .csv file with an 'id' column containing the ids of levels to be cached. This command will make many requests to the GDBrowser API!`,
 		details: `Use this to build up a cache file and avoid making too many requests to the GDBrowser API.`,
 	},
+	complete_multi: {
+		usage: `${commandColor}complete_multi ${argColor}<filename> [coins]${colors.reset}`,
+		description: `Complete multiple levels listed in a .csv file. If 'coins' is true, verified user coins will be obtained as well. This command may make many requests to the GDBrowser API if levels are not cached.`,
+		details: `The csv file should have an 'id' column with the level IDs, and optional 'attempts' and 'jumps' columns. If these optional columns are not given, attempts and jumps will be generated randomly.`,
+	},
 };
 
 export function printHelpInfo() {

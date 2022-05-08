@@ -4,8 +4,10 @@ export type CSVData = {
 	[column: string]: string | number;
 }[];
 
-export type IdCSV = {
+export type LevelCSV = {
 	id: number;
+	attempts?: number;
+	jumps?: number;
 }[];
 
 export function parseCSV(csv: string): CSVData | undefined {
@@ -37,7 +39,7 @@ export function parseCSV(csv: string): CSVData | undefined {
 	return out;
 }
 
-export function isIdCSV(csv: CSVData | undefined): csv is IdCSV {
+export function isLevelCSV(csv: CSVData | undefined): csv is LevelCSV {
 	if (!csv) {
 		return false;
 	}
@@ -48,6 +50,14 @@ export function isIdCSV(csv: CSVData | undefined): csv is IdCSV {
 		}
 
 		if (typeof datum.id !== 'number') {
+			return false;
+		}
+
+		if ('attempts' in datum && typeof datum.attempts !== 'number') {
+			return false;
+		}
+
+		if ('jumps' in datum && typeof datum.jumps !== 'number') {
 			return false;
 		}
 	}
