@@ -65,16 +65,26 @@ export type LevelList = {
 	jumps?: number;
 }[];
 
-export function unlockIcon(save: ReadableSave, iconType: IconType, id: number | 'all') {
+export function unlockIcon(save: ReadableSave, iconType: IconType | 'all', id: number | 'all') {
+	if (!save.unlockedItems) {
+		save.unlockedItems = {};
+	}
+
+	if (iconType === 'all') {
+		for (const info of iconInfo) {
+			for (let i = 2; i <= info.total; i++) {
+				(save.unlockedItems as StrObj<Value>)[`${info.mappedName}_${i}`] = '1';
+			}
+		}
+
+		return;
+	}
+
 	const iconTypeInfo = iconInfo.find((obj) => obj.type === iconType);
 
 	if (!iconTypeInfo) {
 		console.error(`Invalid icon type: ${iconType}`);
 		return;
-	}
-
-	if (!save.unlockedItems) {
-		save.unlockedItems = {};
 	}
 
 	if (id === 'all') {
@@ -149,6 +159,12 @@ export function completeLevel(save: ReadableSave, level: LevelInfo, attempts: nu
 
 	if (!save.onlineLevels) {
 		save.onlineLevels = {};
+	}
+
+	const existingLevel = (save.onlineLevels as StrObj<Value>)[level.id] as StrObj<Value>;
+
+	if (existingLevel && existingLevel['percentage'] === 100) {
+		return;
 	}
 
 	(save.onlineLevels as StrObj<Value>)[level.id] = onlineLevel;

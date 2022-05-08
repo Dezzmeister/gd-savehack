@@ -1,6 +1,13 @@
 import fs from 'fs';
 import path from 'path';
-import { getLevelInfo } from './api';
+import {
+	getLevelInfo,
+	isSearchableDifficulty,
+	LevelInfo,
+	SearchableDifficulty,
+	searchLevels,
+	SearchQuery,
+} from './api';
 import { GD_PATH, SaveFile, SAVE_FILES, SAVE_PATHS } from './app';
 import { deparseReadableSave } from './deparser';
 import { ReadableSave } from './keys';
@@ -15,9 +22,9 @@ import {
 	IconType,
 	LevelList,
 } from './hacks';
-import { printCommandInfo, printHelpInfo } from './ui';
+import { isEditCommand, printCommandInfo, printEditCommandError, printHelpInfo } from './ui';
 import { isLevelCSV, parseCSV } from './list';
-import { cacheLevel, writeCache } from './cache';
+import { cacheLevel, getCache, writeCache } from './cache';
 
 export type Command = typeof commands[number];
 export type CommandMap<T> = {
@@ -36,12 +43,17 @@ const commands = <const>[
 	'unlock_value',
 	'unlock_icon',
 	'cache_multi',
+	'complete_file',
 	'complete_multi',
+	'complete_cache',
+	'load_json',
 ];
 
 const currentSaves: {
 	[key in SaveFile]?: ReadableSave;
 } = {};
+
+const MAX_CONSECUTIVE_SEARCH_ERRORS = 5;
 
 export async function handleCommand(command: string): Promise<void> {
 	const tokens = command.split(' ');
@@ -49,6 +61,11 @@ export async function handleCommand(command: string): Promise<void> {
 
 	if (!isCommand(operation)) {
 		console.log("Not a valid command; type 'help' for a list of commands");
+		return;
+	}
+
+	if (isEditCommand(operation) && Object.keys(currentSaves).length === 0) {
+		printEditCommandError(operation);
 		return;
 	}
 
@@ -128,7 +145,7 @@ export async function handleCommand(command: string): Promise<void> {
 			const iconType = tokens[1];
 			const id = parseInt(tokens[2]);
 
-			if (!isIconType(iconType)) {
+			if (!isIconType(iconType) && iconType !== 'all') {
 				console.error(`Invalid icon type: ${iconType}. Do 'help unlock_icon' for more info.`);
 				return;
 			}
@@ -151,7 +168,7 @@ export async function handleCommand(command: string): Promise<void> {
 			await cacheMulti(filename);
 			return;
 		}
-		case 'complete_multi': {
+		case 'complete_file': {
 			const filename = tokens[1];
 			const coins = tokens[2] === 'true' ? true : false;
 
@@ -159,13 +176,121 @@ export async function handleCommand(command: string): Promise<void> {
 				return tokenError('path', 'string');
 			}
 
-			await completeMulti(filename, coins);
+			await completeFile(filename, coins);
+			return;
+		}
+		case 'complete_multi': {
+			const page = parseInt(tokens[1]);
+			const count = parseInt(tokens[2]);
+			const coins = tokens[3] === 'true' ? true : false;
+			const starredOnly = tokens[4] === 'true' ? true : false;
+			const difficulty = tokens[5];
+
+			if (tokens[1] === undefined || isNaN(page)) {
+				return tokenError('page', 'int');
+			}
+
+			if (tokens[2] === undefined || isNaN(count)) {
+				return tokenError('count', 'int');
+			}
+
+			if (tokens[3] === undefined) {
+				return tokenError('coins', 'boolean');
+			}
+
+			if (tokens[4] === undefined) {
+				return tokenError('starredOnly', 'boolean');
+			}
+
+			if (difficulty !== undefined && !isSearchableDifficulty(difficulty)) {
+				console.error(`Invalid difficulty: ${difficulty}`);
+				return;
+			}
+
+			await completeMulti(page, count, coins, starredOnly, difficulty);
+			return;
+		}
+		case 'complete_cache': {
+			const coins = tokens[1] === 'true' ? true : false;
+
+			completeCache(coins);
+			return;
+		}
+		case 'load_json': {
+			const dir = tokens[1];
+
+			loadJson(dir);
 			return;
 		}
 	}
 }
 
-async function completeMulti(filename: string, coins: boolean) {
+function loadJson(dir = '.') {
+	for (const filename of SAVE_FILES) {
+		const file = fs.readFileSync(path.join(dir, `${filename}.json`)).toString();
+		currentSaves[filename] = JSON.parse(file);
+	}
+}
+
+function completeCache(coins: boolean) {
+	const cache = getCache();
+	const levelList: LevelList = [];
+
+	for (const levelId in cache) {
+		const levelInfo = cache[levelId];
+		levelList.push({
+			id: parseInt(levelId),
+			info: levelInfo,
+		});
+	}
+
+	for (const key in currentSaves) {
+		const save = currentSaves[key as keyof typeof currentSaves] as ReadableSave;
+		doCompleteMulti(save, levelList, coins);
+	}
+}
+
+async function completeMulti(
+	page: number,
+	count: number,
+	coins: boolean,
+	starredOnly: boolean,
+	difficulty?: SearchableDifficulty,
+) {
+	const query: SearchQuery = {
+		page,
+		difficulty,
+		starredOnly,
+	};
+
+	let levelInfos: LevelInfo[] = [];
+	let consecutiveErrors = 0;
+
+	while (levelInfos.length < count && consecutiveErrors < MAX_CONSECUTIVE_SEARCH_ERRORS) {
+		const res = await searchLevels(query);
+
+		if (typeof res === 'string') {
+			console.error(`Error performing search query: ${res}`);
+			consecutiveErrors++;
+		} else {
+			levelInfos.push(...res);
+		}
+
+		query.page++;
+	}
+
+	const levelList: LevelList = levelInfos.map((info) => ({
+		id: parseInt(info.id),
+		info,
+	}));
+
+	for (const key in currentSaves) {
+		const save = currentSaves[key as keyof typeof currentSaves] as ReadableSave;
+		doCompleteMulti(save, levelList, coins);
+	}
+}
+
+async function completeFile(filename: string, coins: boolean) {
 	const file = fs.readFileSync(filename).toString();
 	const csv = parseCSV(file);
 	if (!isLevelCSV(csv)) {
@@ -216,7 +341,7 @@ async function cacheMulti(filename: string) {
 	writeCache();
 }
 
-function unlockIcon(iconType: IconType, id: number | 'all') {
+function unlockIcon(iconType: IconType | 'all', id: number | 'all') {
 	for (const key in currentSaves) {
 		const save = currentSaves[key as keyof typeof currentSaves] as ReadableSave;
 		doUnlockIcon(save, iconType, id);
@@ -224,11 +349,6 @@ function unlockIcon(iconType: IconType, id: number | 'all') {
 }
 
 function unlockValue(value: string): void {
-	if (Object.keys(currentSaves).length === 0) {
-		console.error("You need to have at least one active save for this to work. Do 'load' or 'help' for more info.");
-		return;
-	}
-
 	if (!isUnlockableValue(value)) {
 		console.error(
 			`Expected unlockable value, received '${value}' instead. Do 'help unlock_value' for more details.`,
@@ -243,11 +363,6 @@ function unlockValue(value: string): void {
 }
 
 function writeSaves(dir = '.') {
-	if (Object.keys(currentSaves).length === 0) {
-		console.error("You need to have at least one active save for this to work. Do 'load' or 'help' for more info.");
-		return;
-	}
-
 	for (const filename of SAVE_FILES) {
 		const save = currentSaves[filename] as ReadableSave;
 		fs.writeFileSync(path.join(dir, `${filename}.json`), JSON.stringify(save));
@@ -255,11 +370,6 @@ function writeSaves(dir = '.') {
 }
 
 async function completeLevel(id: number, attempts: number, jumps: number, coins: boolean): Promise<void> {
-	if (Object.keys(currentSaves).length === 0) {
-		console.error("You need to have at least one active save for this to work. Do 'load' or 'help' for more info.");
-		return;
-	}
-
 	const data = await getLevelInfo(id);
 
 	if (typeof data === 'string') {

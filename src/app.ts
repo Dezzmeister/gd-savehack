@@ -1,5 +1,6 @@
 import path from 'path';
 import readlineSync from 'readline-sync';
+import { searchLevels } from './api';
 import { handleCommand } from './command';
 
 export const SAVE_FILES = <const>['CCGameManager.dat', 'CCGameManager2.dat'];
@@ -12,6 +13,12 @@ export const SAVE_PATHS = SAVE_FILES.map((filename) => path.join(GD_PATH || '', 
 async function main() {
 	let input = '';
 	console.log("Enter a command, or 'help' for help");
+
+	await searchLevels({
+		page: 1,
+		difficulty: 'insane_demon',
+		starredOnly: true,
+	});
 
 	while ((input = readlineSync.question('> ')) !== 'quit') {
 		await handleCommand(input);

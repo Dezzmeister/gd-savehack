@@ -39,32 +39,3 @@ function invertArray(arr: readonly string[]): StrObj<number> {
 
 	return out;
 }
-
-/*
-function invertLevelKeys(obj: typeof levelKeys): StrObj<Value> {
-	const out: StrObj<Value> = {};
-
-	for (const key in obj) {
-		const val = obj[key as keyof typeof obj];
-		if (typeof val === 'string') {
-			out[val] = key;
-			continue;
-		}
-
-		if (!('bump' in val)) {
-			out[val.name] = { name: key };
-			continue;
-		}
-
-		const invBump: StrObj<number> = {};
-		for (let i = 0; i < val.bump.length; i++) {
-			invBump[val.bump[i]] = i;
-		}
-
-		out[val.name] = { name: key, bump: invBump };
-	}
-
-	return out;
-}
-*/
-// TODO: Maybe make this const
