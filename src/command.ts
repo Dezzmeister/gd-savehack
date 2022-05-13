@@ -21,6 +21,7 @@ import {
 	isIconType,
 	IconType,
 	LevelList,
+	completeMapPacks as doCompleteMapPacks,
 } from './hacks';
 import { isEditCommand, printCommandInfo, printEditCommandError, printHelpInfo } from './ui';
 import { isLevelCSV, parseCSV } from './list';
@@ -47,6 +48,7 @@ const commands = <const>[
 	'complete_multi',
 	'complete_cache',
 	'load_json',
+	'complete_map_packs',
 ];
 
 const currentSaves: {
@@ -222,7 +224,24 @@ export async function handleCommand(command: string): Promise<void> {
 			loadJson(dir);
 			return;
 		}
+		case 'complete_map_packs': {
+			const coins = tokens[1] === 'true' ? true : false;
+
+			await completeMapPacks(coins);
+			return;
+		}
 	}
+}
+
+async function completeMapPacks(coins: boolean) {
+	const promises: Promise<void>[] = [];
+
+	for (const key in currentSaves) {
+		const save = currentSaves[key as keyof typeof currentSaves] as ReadableSave;
+		promises.push(doCompleteMapPacks(save, coins));
+	}
+
+	await Promise.all(promises);
 }
 
 function loadJson(dir = '.') {

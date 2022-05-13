@@ -127,7 +127,13 @@ const commands: CommandMap<FormattedCommand> = {
 	},
 	complete_cache: {
 		usage: `${commandColor}complete_cache ${argColor}[coins]${colors.reset}`,
-		description: `Complete every level in the cache. If 'coins' is 'true', coins will be obtained from levels with verified user coins.`,
+		description: `Complete every level in the cache. If ${argColor}coins${colors.reset} is 'true', coins will be obtained from levels with verified user coins.`,
+		details: ``,
+		isEditCommand: true,
+	},
+	complete_map_packs: {
+		usage: `${commandColor}complete_map_packs ${argColor}[coins]${colors.reset}`,
+		description: `Complete every map pack level. If ${argColor}coins${colors.reset} is 'true', user coins will be obtained from levels with verified user coins.`,
 		details: ``,
 		isEditCommand: true,
 	},

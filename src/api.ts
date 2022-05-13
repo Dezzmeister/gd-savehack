@@ -119,7 +119,7 @@ export async function getLevelInfo(levelId: number): Promise<LevelInfo | string>
 
 		return response.data as LevelInfo;
 	} catch (error) {
-		return `An error occurred: ${error}`;
+		return `An error occurred for level ID ${levelId}: ${error}`;
 	}
 }
 
