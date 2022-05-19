@@ -1,5 +1,7 @@
 import axios from 'axios';
-import { cacheLevel, getCachedLevel, writeCache } from './cache';
+import { cacheObject, getCachedObject, writeCache } from './cache';
+import { MapPack } from './keys';
+import { constParams, rawGDRequest } from './raw_api';
 
 export type LevelInfo = {
 	name: string;
@@ -94,10 +96,10 @@ export async function searchLevels(queryObj: SearchQuery): Promise<LevelInfo[] |
 		const levelInfos = response.data as LevelInfo[];
 
 		for (const info of levelInfos) {
-			cacheLevel(info);
+			cacheObject('level', info);
 		}
 
-		writeCache();
+		writeCache('level');
 
 		return levelInfos;
 	} catch (error) {
@@ -105,8 +107,33 @@ export async function searchLevels(queryObj: SearchQuery): Promise<LevelInfo[] |
 	}
 }
 
+export async function buildMapPackCache() {
+	let page = 0;
+	const packs: MapPack[] = [];
+
+	while (page < 8) {
+		const res = await rawGDRequest('getGJMapPacks21', { ...constParams, page });
+
+		if (typeof res === 'string') {
+			console.error(res);
+			page++;
+			continue;
+		}
+
+		if (res === null) {
+			break;
+		}
+
+		packs.push(...res);
+
+		page++;
+	}
+	packs.forEach((pack) => cacheObject('mappack', pack));
+	writeCache('mappack');
+}
+
 export async function getLevelInfo(levelId: number): Promise<LevelInfo | string> {
-	const cached = getCachedLevel(levelId);
+	const cached = getCachedObject('level', levelId);
 
 	if (cached) {
 		return cached;
@@ -114,8 +141,8 @@ export async function getLevelInfo(levelId: number): Promise<LevelInfo | string>
 
 	try {
 		const response = await axios.get(`${API_URL}${LEVEL_INFO}/${levelId}`);
-		cacheLevel(response.data);
-		writeCache();
+		cacheObject('level', response.data);
+		writeCache('level');
 
 		return response.data as LevelInfo;
 	} catch (error) {

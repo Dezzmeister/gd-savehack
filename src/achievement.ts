@@ -7,7 +7,7 @@ export type Unlockable = `${typeof iconInfo[number]['mappedName']}_${number}`;
 
 export type AchievementName<T extends AchievementCategory> = `geometry.ach.${T}${number}`;
 
-export type AchievementCategory = 'usercoins' | 'stars' | 'jump' | 'attempt' | 'custom' | 'demon';
+export type AchievementCategory = 'usercoins' | 'stars' | 'jump' | 'attempt' | 'custom' | 'demon' | 'coins';
 
 export type AchievementMap<T extends AchievementCategory> = {
 	[achievement in AchievementName<T>]: {
@@ -386,6 +386,109 @@ export const demonAchMap: AchievementMap<'demon'> = {
 	},
 };
 
+export const coinsAchMap: AchievementMap<'coins'> = {
+	'geometry.ach.coins01': {
+		set: (save) => getPercentage(save, 'coins', 5),
+		unlocks: `i_31`,
+	},
+	'geometry.ach.coins02': {
+		set: (save) => getPercentage(save, 'coins', 10),
+		unlocks: `ball_2`,
+	},
+	'geometry.ach.coins03': {
+		set: (save) => getPercentage(save, 'coins', 15),
+		unlocks: `c1_05`,
+	},
+	'geometry.ach.coins04': {
+		set: (save) => getPercentage(save, 'coins', 20),
+		unlocks: `bird_3`,
+	},
+	'geometry.ach.coins05': {
+		set: (save) => getPercentage(save, 'coins', 25),
+		unlocks: `i_32`,
+	},
+	'geometry.ach.coins06': {
+		set: (save) => getPercentage(save, 'coins', 30),
+		unlocks: `c0_20`,
+	},
+	'geometry.ach.coins07': {
+		set: (save) => getPercentage(save, 'coins', 35),
+		unlocks: `ball_3`,
+	},
+	'geometry.ach.coins08': {
+		set: (save) => getPercentage(save, 'coins', 40),
+		unlocks: `i_35`,
+	},
+	'geometry.ach.coins09': {
+		set: (save) => getPercentage(save, 'coins', 45),
+		unlocks: `bird_4`,
+	},
+	'geometry.ach.coins10': {
+		set: (save) => getPercentage(save, 'coins', 50),
+		unlocks: `ball_4`,
+	},
+	'geometry.ach.coins11': {
+		set: (save) => getPercentage(save, 'coins', 55),
+		unlocks: `ship_14`,
+	},
+	'geometry.ach.coins12': {
+		set: (save) => getPercentage(save, 'coins', 60),
+		unlocks: `i_38`,
+	},
+	'geometry.ach.coins13': {
+		set: (save) => getPercentage(save, 'coins', 65),
+		unlocks: `bird_6`,
+	},
+	'geometry.ach.coins14': {
+		set: (save) => getPercentage(save, 'coins', 70),
+		unlocks: `ball_6`,
+	},
+	'geometry.ach.coins15': {
+		set: (save) => getPercentage(save, 'coins', 75),
+		unlocks: `ship_12`,
+	},
+	'geometry.ach.coins16': {
+		set: (save) => getPercentage(save, 'coins', 80),
+		unlocks: `bird_7`,
+	},
+	'geometry.ach.coins17': {
+		set: (save) => getPercentage(save, 'coins', 85),
+		unlocks: `bird_8`,
+	},
+	'geometry.ach.coins18': {
+		set: (save) => getPercentage(save, 'coins', 90),
+		unlocks: `ship_16`,
+	},
+	'geometry.ach.coins19': {
+		set: (save) => getPercentage(save, 'coins', 95),
+		unlocks: `i_43`,
+	},
+	'geometry.ach.coins20': {
+		set: (save) => getPercentage(save, 'coins', 100),
+		unlocks: `bird_9`,
+	},
+	'geometry.ach.coins21': {
+		set: (save) => getPercentage(save, 'coins', 105),
+		unlocks: `ball_14`,
+	},
+	'geometry.ach.coins22': {
+		set: (save) => getPercentage(save, 'coins', 110),
+		unlocks: `i_56`,
+	},
+	'geometry.ach.coins23': {
+		set: (save) => getPercentage(save, 'coins', 115),
+		unlocks: `ship_24`,
+	},
+	'geometry.ach.coins24': {
+		set: (save) => getPercentage(save, 'coins', 120),
+		unlocks: `bird_18`,
+	},
+	'geometry.ach.coins25': {
+		set: (save) => getPercentage(save, 'coins', 130),
+		unlocks: `i_88`,
+	},
+};
+
 export const achievementMap: AchievementMap<AchievementCategory> = {
 	...userCoinsAchMap,
 	...starsAchMap,
@@ -393,6 +496,7 @@ export const achievementMap: AchievementMap<AchievementCategory> = {
 	...attemptAchMap,
 	...onlineLevelAchMap,
 	...demonAchMap,
+	...coinsAchMap,
 };
 
 export function setAchievements(save: ReadableSave, forceUnlocks = false) {

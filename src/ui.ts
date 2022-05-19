@@ -131,9 +131,9 @@ const commands: CommandMap<FormattedCommand> = {
 		details: ``,
 		isEditCommand: true,
 	},
-	complete_map_packs: {
-		usage: `${commandColor}complete_map_packs ${argColor}[coins]${colors.reset}`,
-		description: `Complete every map pack level. If ${argColor}coins${colors.reset} is 'true', user coins will be obtained from levels with verified user coins.`,
+	complete_map_pack: {
+		usage: `${commandColor}complete_map_pack ${argColor}<name> [coins]${colors.reset}`,
+		description: `Complete every map pack level. ${argColor}name${colors.reset} can be either 'all' or the name of a map pack. If ${argColor}coins${colors.reset} is 'true', user coins will be obtained from levels with verified user coins.`,
 		details: ``,
 		isEditCommand: true,
 	},

@@ -1,66 +1,91 @@
 import { LevelInfo } from './api';
 import fs from 'fs';
+import { MapPack } from './keys';
 
-type Cache = {
+type LevelCache = {
 	[id: number]: LevelInfo;
 };
 
-const CACHE_FILE = 'levelcache.json';
-let cache: Cache | undefined;
+type MapPackCache = {
+	[id: number]: MapPack;
+};
 
-function loadCache(): Cache {
-	if (!fs.existsSync(CACHE_FILE)) {
+type CacheName = keyof CacheType;
+type CacheType = {
+	level?: LevelCache;
+	mappack?: MapPackCache;
+};
+type CacheObject<T extends CacheName> = Required<CacheType>[T][keyof Required<CacheType>[T]];
+type CacheIdMap = {
+	[key in CacheName]: keyof CacheObject<key> & string;
+};
+
+type CacheMap<T> = {
+	[key in CacheName]: T;
+};
+
+const cacheFiles: CacheMap<string> = {
+	level: 'levelcache.json',
+	mappack: 'mappackcache.json',
+};
+
+const cacheIds: CacheIdMap = {
+	level: 'id',
+	mappack: 'packId',
+};
+
+const cache: CacheType = {
+	level: undefined,
+	mappack: undefined,
+};
+
+function loadCache<T extends CacheName>(cacheName: T): CacheType[T] {
+	const filename = cacheFiles[cacheName];
+
+	if (!fs.existsSync(filename)) {
 		return {};
 	}
 
-	const data = fs.readFileSync(CACHE_FILE).toString();
+	const data = fs.readFileSync(filename).toString();
 	return JSON.parse(data);
 }
 
-export function getCache(): Cache {
-	if (!cache) {
-		cache = loadCache();
+export function getCache<T extends CacheName>(cacheName: T): Required<CacheType>[T] {
+	if (!cache[cacheName]) {
+		cache[cacheName] = loadCache(cacheName);
 	}
 
-	return cache;
+	return cache[cacheName] as any;
 }
 
-export function cacheLevel(level: LevelInfo) {
-	if (!cache) {
-		cache = loadCache();
+export function cacheObject<T extends CacheName>(cacheName: T, obj: CacheObject<T>) {
+	if (!cache[cacheName]) {
+		cache[cacheName] = loadCache(cacheName);
 	}
 
-	const id = parseInt(level.id);
-	cache[id] = level;
+	const id = parseInt(obj[cacheIds[cacheName]] as any);
+	const objCache = cache[cacheName as CacheName];
+
+	if (objCache) {
+		objCache[id] = obj as any;
+	}
 }
 
-export function writeCache() {
-	if (!cache) {
+export function writeCache<T extends CacheName>(cacheName: T) {
+	if (!cache[cacheName]) {
 		return;
 	}
 
-	fs.writeFileSync(CACHE_FILE, JSON.stringify(cache));
+	fs.writeFileSync(cacheFiles[cacheName], JSON.stringify(cache[cacheName]));
 }
 
-export function flushCache(id: number | 'all') {
-	if (!cache) {
-		cache = loadCache();
+export function getCachedObject<T extends CacheName>(cacheName: T, id: number): CacheObject<T> | undefined {
+	if (!cache[cacheName]) {
+		cache[cacheName] = loadCache(cacheName);
 	}
 
-	if (id === 'all') {
-		cache = {};
-		return;
-	}
-
-	delete cache[id];
-}
-
-export function getCachedLevel(id: number): LevelInfo | undefined {
-	if (!cache) {
-		cache = loadCache();
-	}
-
-	if (id in cache) {
-		return cache[id];
+	const objCache = cache[cacheName];
+	if (objCache && id in objCache) {
+		return objCache[id] as any;
 	}
 }

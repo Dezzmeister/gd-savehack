@@ -21,11 +21,11 @@ import {
 	isIconType,
 	IconType,
 	LevelList,
-	completeMapPacks as doCompleteMapPacks,
+	completeMapPack as doCompleteMapPack,
 } from './hacks';
 import { isEditCommand, printCommandInfo, printEditCommandError, printHelpInfo } from './ui';
 import { isLevelCSV, parseCSV } from './list';
-import { cacheLevel, getCache, writeCache } from './cache';
+import { cacheObject, getCache, writeCache } from './cache';
 
 export type Command = typeof commands[number];
 export type CommandMap<T> = {
@@ -48,7 +48,7 @@ const commands = <const>[
 	'complete_multi',
 	'complete_cache',
 	'load_json',
-	'complete_map_packs',
+	'complete_map_pack',
 ];
 
 const currentSaves: {
@@ -58,7 +58,7 @@ const currentSaves: {
 const MAX_CONSECUTIVE_SEARCH_ERRORS = 5;
 
 export async function handleCommand(command: string): Promise<void> {
-	const tokens = command.split(' ');
+	const tokens = tokenize(command);
 	const operation = tokens[0];
 
 	if (!isCommand(operation)) {
@@ -224,21 +224,26 @@ export async function handleCommand(command: string): Promise<void> {
 			loadJson(dir);
 			return;
 		}
-		case 'complete_map_packs': {
-			const coins = tokens[1] === 'true' ? true : false;
+		case 'complete_map_pack': {
+			const pack = tokens[1];
+			const coins = tokens[2] === 'true' ? true : false;
 
-			await completeMapPacks(coins);
+			if (!pack) {
+				return tokenError('pack', 'quoted string');
+			}
+
+			await completeMapPack(coins, pack);
 			return;
 		}
 	}
 }
 
-async function completeMapPacks(coins: boolean) {
+async function completeMapPack(coins: boolean, pack: string) {
 	const promises: Promise<void>[] = [];
 
 	for (const key in currentSaves) {
 		const save = currentSaves[key as keyof typeof currentSaves] as ReadableSave;
-		promises.push(doCompleteMapPacks(save, coins));
+		promises.push(doCompleteMapPack(save, coins, pack));
 	}
 
 	await Promise.all(promises);
@@ -252,7 +257,7 @@ function loadJson(dir = '.') {
 }
 
 function completeCache(coins: boolean) {
-	const cache = getCache();
+	const cache = getCache('level');
 	const levelList: LevelList = [];
 
 	for (const levelId in cache) {
@@ -354,10 +359,10 @@ async function cacheMulti(filename: string) {
 			continue;
 		}
 
-		cacheLevel(levelData);
+		cacheObject('level', levelData);
 	}
 
-	writeCache();
+	writeCache('level');
 }
 
 function unlockIcon(iconType: IconType | 'all', id: number | 'all') {
@@ -446,4 +451,33 @@ function isCommand(command: string): command is Command {
 
 function tokenError(paramName: string, type: string) {
 	console.error(`Invalid or missing required parameter <${paramName}> with type ${type}`);
+}
+
+function tokenize(rawCmd: string): string[] {
+	const matches = rawCmd.match(/\"[^\"]+\"/g);
+
+	if (!matches || !matches.length) {
+		return rawCmd.split(' ');
+	}
+
+	const tokens: string[] = [];
+	let index = 0;
+
+	for (const match of matches) {
+		const matchIndex = rawCmd.substring(index).indexOf(match) + index;
+		const part = rawCmd.substring(index, matchIndex);
+
+		const partTokens = part.split(' ').filter((str) => str !== '');
+		tokens.push(...partTokens);
+		tokens.push(match.replace(/\"/g, ''));
+		index += part.length + match.length;
+	}
+
+	const lastTokens = rawCmd
+		.substring(index)
+		.split(' ')
+		.filter((str) => str !== '');
+	tokens.push(...lastTokens);
+
+	return tokens;
 }

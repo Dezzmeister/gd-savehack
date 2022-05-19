@@ -1,6 +1,7 @@
 import randomNormal from 'random-normal';
 import { setAchievements } from './achievement';
-import { LevelInfo, getLevelInfo } from './api';
+import { LevelInfo, getLevelInfo, buildMapPackCache } from './api';
+import { getCache } from './cache';
 import { invGameEvents } from './invkeys';
 import { demonTypesFull, GameEvent, ReadableSave, StrObj, Value } from './keys';
 
@@ -76,271 +77,6 @@ export const iconInfo = <const>[
 	},
 ];
 
-const mapPackStars = {
-	pack_67: '2',
-	pack_68: '3',
-	pack_69: '3',
-	pack_71: '4',
-	pack_72: '4',
-	pack_73: '4',
-	pack_74: '5',
-	pack_75: '5',
-	pack_76: '5',
-	pack_77: '6',
-	pack_1: '3',
-	pack_2: '4',
-	pack_3: '4',
-	pack_5: '5',
-	pack_6: '6',
-	pack_7: '6',
-	pack_8: '7',
-	pack_9: '8',
-	pack_10: '8',
-	pack_11: '9',
-	pack_22: '10',
-	pack_32: '4',
-	pack_33: '5',
-	pack_35: '8',
-	pack_36: '8',
-	pack_37: '5',
-	pack_38: '5',
-	pack_39: '6',
-	pack_40: '7',
-	pack_41: '8',
-	pack_42: '8',
-	pack_43: '8',
-	pack_44: '9',
-	pack_45: '6',
-	pack_52: '4',
-	pack_53: '3',
-	pack_54: '4',
-	pack_55: '4',
-	pack_56: '5',
-	pack_57: '6',
-	pack_58: '7',
-	pack_59: '8',
-	pack_60: '8',
-	pack_61: '8',
-	pack_62: '9',
-	pack_34: '6',
-	pack_19: '10',
-	pack_20: '10',
-	pack_26: '10',
-	pack_21: '10',
-	pack_27: '10',
-	pack_28: '10',
-	pack_29: '10',
-	pack_30: '10',
-	pack_31: '10',
-	pack_46: '10',
-	pack_47: '10',
-	pack_48: '10',
-	pack_49: '10',
-	pack_50: '10',
-	pack_64: '10',
-	pack_65: '10',
-	pack_66: '10',
-	pack_70: '4',
-	pack_63: '9',
-};
-
-export const mapPackIds = [
-	// Alpha pack
-	4454123, 11280109, 6508283,
-
-	// Beginner pack
-	11940, 150245, 215705,
-
-	// Sapphire pack
-	1244147, 1389451, 1642022,
-
-	// Force pack
-	10992098, 9110646, 9063899,
-
-	// Cookie pack
-	8320596, 2820124, 8477262,
-
-	// Normal pack
-	151245, 61757, 150906,
-
-	// Remix pack 1
-	59767, 61982, 65106,
-
-	// Stereo pack
-	490078, 506009, 513124,
-
-	// UFO pack
-	1512012, 1602784, 1649640,
-
-	// Amethyst pack
-	1314024, 1629780, 1721197,
-
-	// Ruby pack
-	1446958, 1063115, 1734354,
-
-	// Electro pack
-	5131543, 8157377, 8571598,
-
-	// Laser pack
-	12178580, 11357573, 11591917,
-
-	// GLow pack
-	4449079, 6979485, 10110092,
-
-	// Spirit pack
-	13766381, 13242284, 13963465,
-
-	// Hard pack
-	217631, 3785, 281148,
-
-	// Morph pack
-	364445, 411459, 509393,
-
-	// Phoenix pack
-	674454, 750434, 835854,
-
-	// Power pack
-	809579, 741941, 577710,
-
-	// Shiny pack
-	980341, 1541962, 1160937,
-
-	// Ion pack
-	8939774, 9204593, 6324840,
-
-	// Blade pack
-	7485599, 5017264, 6053464,
-
-	// Sparkle pack
-	13912771, 12577409, 11924846,
-
-	// Challenge pack
-	167527, 23420, 88737,
-
-	// Remix pack 2
-	71485, 77879, 79275,
-
-	// Dash pack
-	422703, 460862, 124052,
-
-	// Elemental pack
-	819956, 540428, 878743,
-
-	// Fast pack
-	856066, 862216, 877915,
-
-	// Color pack
-	1001204, 1694003, 1544084,
-
-	// Happy pack
-	3382569, 3224853, 3012870,
-
-	// Expert pack
-	8612, 131259, 85065,
-
-	// Bionic pack
-	714673, 729521, 661286,
-
-	// Warp pack
-	1498893, 1123276, 1322487,
-
-	// Remix pack 3
-	87960, 116806, 278956,
-
-	// Fusion pack
-	269500, 49229, 169590,
-
-	// Turbo pack 1
-	461472, 516810, 447766,
-
-	// Turbo pack 2
-	456675, 471354, 457265,
-
-	// Shatter pack
-	821459, 692596, 745177,
-
-	// Twisted pack
-	857195, 687938, 804313,
-
-	// Mortal pack
-	827829, 664044, 708901,
-
-	// Cyclone pack
-	1566116, 946020, 1100161,
-
-	// Colossus pack
-	1350389, 1215630, 1724579,
-
-	// Diamond pack
-	1267316, 1670283, 1205277,
-
-	// Chaos pack
-	329929, 188909, 340602,
-
-	// Magma pack
-	882417, 884256, 551979,
-
-	// Paradox pack
-	1447246, 1132530, 1683722,
-
-	// Funky pack
-	1728550, 1799065, 1311773,
-
-	// Remix pack 4
-	341613, 358750, 369294,
-
-	// Demon pack 1
-	70059, 10109, 135561,
-
-	// Demon pack 2
-	57730, 308891, 102765,
-
-	// Demon pack 3
-	186646, 13519, 55520,
-
-	// Demon pack 4
-	199761, 214523, 130414,
-
-	// Demon pack 5
-	497514, 380082, 553327,
-
-	// Demon pack 6
-	541953, 379772, 449502,
-
-	// Demon pack 7
-	511533, 350329, 428765,
-
-	// Demon pack 8
-	393159, 456678, 396874,
-
-	// Demon pack 9
-	450920, 316982, 436624,
-
-	// Demon pack 10
-	874540, 664867, 700880,
-
-	// Demon pack 11
-	682941, 897987, 513137,
-
-	// Demon pack 12
-	776919, 741635, 735154,
-
-	// Demon pack 13
-	764038, 897837, 848722,
-
-	// Demon pack 14
-	840397, 413504, 839175,
-
-	// Demon pack 15
-	1018758, 1326086, 1698428,
-
-	// Demon pack 16
-	1668421, 1703546, 923264,
-
-	// Demon pack 17
-	1650666, 1474319, 1777565,
-];
-
 export function unlockIcon(save: ReadableSave, iconType: IconType | 'all', id: number | 'all') {
 	if (!save.unlockedItems) {
 		save.unlockedItems = {};
@@ -404,30 +140,84 @@ export function completeMulti(save: ReadableSave, levels: LevelList, coins: bool
 	}
 }
 
-export async function completeMapPacks(save: ReadableSave, coins: boolean) {
-	const promises = mapPackIds.map((levelId) => getLevelInfo(levelId));
-	const levels = await Promise.all(promises);
+export async function completeMapPack(save: ReadableSave, coins: boolean, name = 'all') {
+	let cache = getCache('mappack');
 
-	if (!save.mapPackStars) {
-		save.mapPackStars = { ...mapPackStars };
+	if (Object.keys(cache).length === 0) {
+		await buildMapPackCache();
 	}
 
-	for (const level of levels) {
-		if (typeof level === 'string') {
-			console.error(level);
-			continue;
+	cache = getCache('mappack');
+	const packsToComplete = Object.keys(cache).filter(
+		(packId) => name === 'all' || cache[Number(packId)].name.includes(name),
+	);
+
+	if (packsToComplete.length === 0) {
+		console.error(
+			`No map packs found. If you're trying to complete a new map pack, try deleting the map pack cache.`,
+		);
+		return;
+	}
+
+	for (const packId of packsToComplete) {
+		const pack = cache[Number(packId)];
+		const levels = await Promise.all(pack.levelIds.map(getLevelInfo));
+		const goodLevels = levels.filter((level) => typeof level !== 'string') as LevelInfo[];
+		levels
+			.filter((level) => typeof level === 'string')
+			.forEach((error) => console.log(`Error fetching level: ${error}`));
+
+		let completedLevels = 0;
+
+		for (const level of goodLevels) {
+			const attempts = randomAttempts(level.difficulty);
+			const jumps = randomJumps(level.difficulty, attempts);
+
+			const completedLevel = completeLevel(save, level, attempts, jumps, coins);
+
+			if (completedLevel) {
+				completedLevels++;
+			}
 		}
-		const attempts = randomAttempts(level.difficulty);
-		const jumps = randomJumps(level.difficulty, attempts);
 
-		const completedLevel = completeLevel(save, level, attempts, jumps, coins);
+		if (completedLevels === 3) {
+			if (!save.stats) {
+				save.stats = {};
+			}
 
-		if (completedLevel) {
-			// TODO: Update map pack status for every three levels
+			if (!save.stats.mapPacks) {
+				save.stats.mapPacks = 0;
+			}
+
+			save.stats.mapPacks++;
+
+			if (!save.stats.stars) {
+				save.stats.stars = 0;
+			}
+
+			save.stats.stars += pack.stars;
+
+			if (!save.stats.coins) {
+				save.stats.coins = 0;
+			}
+
+			save.stats.coins++;
+
+			if (!save.completedLevels) {
+				save.completedLevels = {};
+			}
+
+			(save.completedLevels as StrObj<Value>)[`pack_${packId}`] = '1';
+
+			if (!save.mapPackStars) {
+				save.mapPackStars = {};
+			}
+
+			(save.mapPackStars as StrObj<Value>)[`pack_${packId}`] = pack.stars;
 		}
 	}
 
-	setAchievements(save, false);
+	// TODO: Check achievements
 }
 
 export function completeLevel(

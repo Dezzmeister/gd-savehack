@@ -64,6 +64,16 @@ export type RawLevelList = {
 export type RawGameEvent = keyof typeof gameEvents;
 export type GameEvent = typeof gameEvents[RawGameEvent];
 
+//export type MapPack = typeof mapPackKeys[keyof typeof mapPackKeys];
+
+export type MapPack = {
+	packId: number;
+	name: string;
+	levelIds: [number, number, number];
+	stars: number;
+	difficulty: number;
+};
+
 // KV maps
 
 export const tags = <const>['d', 'r', 'i', 's', 't', 'f'];
@@ -504,6 +514,14 @@ export const gameEvents = <const>{
 	'22': 'youtubeChest',
 	'23': 'facebookChest',
 	'24': 'twitterChest',
+};
+
+export const mapPackKeys = <const>{
+	'1': 'packId',
+	'2': 'name',
+	'3': 'levelIds',
+	'4': 'stars',
+	'6': 'difficulty',
 };
 
 // Helper functions
