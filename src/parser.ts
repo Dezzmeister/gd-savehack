@@ -65,7 +65,20 @@ function makeStatsObject(data: PartialReadableSave['stats']): Stats {
 
 	return newStats;
 }
+/*
+function makeRewardObject(data: StrObj<Value>): StrObj<Value> {
+	const out: StrObj<Value> = {};
 
+	for (const key in data) {
+		if (key === 'kCEK') {
+			out['type'] = kcekKeys[data[key] as keyof typeof kcekKeys];
+			continue;
+		}
+
+
+	}
+}
+*/
 function makeLevelObjects(data: Value): StrObj<Value> {
 	if (!isStrObj(data)) {
 		return {};

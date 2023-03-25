@@ -278,6 +278,28 @@ export const chestKeys = {
 };
 
 export const rewardKeys = {
+	1: 'item',
+	2: 'iconID',
+	3: 'amount',
+	4: 'iconType',
+};
+
+export const secondaryRewardKeys = {
+	item: [
+		'Fire Shard',
+		'Ice Shard',
+		'Poison Shard',
+		'Shadow Shard',
+		'Lava Shard',
+		'Demon Key',
+		'Mana Orbs',
+		'Diamonds',
+		'Icon',
+	],
+	iconType: ['cube', 'color1', 'color2', 'ship', 'ball', 'ufo', 'wave', 'robot', 'spider', 'trail', 'deathEffect'],
+};
+
+export const rewardKeysBump = {
 	1: {
 		name: 'item',
 		bump: [

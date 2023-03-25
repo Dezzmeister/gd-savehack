@@ -8,9 +8,12 @@
   "private": true,
   "scripts": {
     "start": "npx ts-node src/app.ts",
+    "build": "tsc",
+    "start:prod": "node dist/app.js",
     "start:r": "ts-node-dev --respawn -T src/app.ts"
   },
   "devDependencies": {
+    "0x": "^5.5.0",
     "@types/jsdom": "^16.2.14",
     "@types/node": "^17.0.31",
     "@types/random-normal": "^1.0.1",

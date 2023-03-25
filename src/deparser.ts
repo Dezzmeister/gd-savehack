@@ -35,7 +35,7 @@ export function deparseReadableSave(data: ReadableSave): Buffer {
 	return generateGDSaveFile(xml);
 }
 
-function generateGDSaveFile(data: string): Buffer {
+export function generateGDSaveFile(data: string): Buffer {
 	const compressed = zlib.gzipSync(data, { windowBits: 15 });
 	const encoded = Buffer.from(compressed).toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
 	const xored = Buffer.from(encoded).map((x) => x ^ 11);
